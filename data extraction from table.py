@@ -1,17 +1,13 @@
 import pandas as pd
 import numpy as np
+import requests
 from Bio import Entrez
 from Bio import SeqIO
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.SeqUtils import molecular_weight
 from collections import Counter
-import re
 import time
-
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import SGDRegressor
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.tree import DecisionTreeRegressor
+import requests
 
 import matplotlib.pyplot as plt
 
