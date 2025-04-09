@@ -1,11 +1,13 @@
 import os
 import time
 import requests
+import re
+import shutil
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
+from pymol import cmd
 from Bio import Entrez, SeqIO
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.SeqUtils import molecular_weight
@@ -13,10 +15,10 @@ from collections import Counter
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.PDB import PDBList, PDBParser, Superimposer, MMCIFParser
 
-df = pd.read_csv('mydatabep-testing.csv')
-stop = 4
+df = pd.read_csv('mydatabep-uniprot.csv')
+stop = 76
 organism_names = df.iloc[:stop, 0]
-genbank_ids = df.iloc[:stop, 1]
+genbank_ids = [gen.strip() for gen in df.iloc[:stop, 1].dropna().tolist()]
 pIspG_values = df.iloc[:stop, 2]
 uniprot_ids = [uid.strip() for uid in df.iloc[:stop, 3].dropna().tolist()]
 
@@ -44,7 +46,7 @@ def fetch_records(accessions: list[str], batch_size: int):
         except Exception as e:
             print(f"Failed for batch {batch}: {e}")
         
-        time.sleep(3)
+        time.sleep(1)
     return all_records
 
 def extract_seq_features(record) -> dict:
@@ -120,7 +122,7 @@ def generate_go_feature_matrix(uniprot_ids):
 
     return pd.DataFrame(feature_data)
 
-#3D structure features (RMSE)
+#Downloading 3D structures
 
 def get_uniprot_crossrefs(uniprot_id):
     uniprot_id = uniprot_id.strip()
@@ -133,11 +135,9 @@ def get_uniprot_crossrefs(uniprot_id):
     
     entry = response.json()
     pdb_refs = []
-    if "xref_pdb" in entry:
-        for ref in entry["xref_pdb"]:
-            pdb_id = ref.get("id")
-            if pdb_id:
-                pdb_refs.append(pdb_id)
+    for ref in entry.get("uniProtKBCrossReferences", []):
+        if ref.get("database") == "PDB":
+            pdb_refs.append(ref.get("id"))
     return {"PDB": pdb_refs}
 
 def download_pdb_structure(pdb_id, directory="."):
@@ -168,33 +168,17 @@ def download_structure_by_uniprot(uniprot_id, directory="."):
         print(f"No PDB structure found for {uniprot_id}, trying AlphaFold...")
         return download_alphafold_structure(uniprot_id, directory)
 
-# --- RMSE Calculation ---
-def compute_rmse(structure_file, ecoli_structure_file):
-    parser = MMCIFParser(QUIET=True)
-    try:
-        query_struct = parser.get_structure("query", structure_file)
-        ecoli_struct = parser.get_structure("ecoli", ecoli_structure_file)
-    except Exception as e:
-        print(f"Error parsing structure files: {e}")
-        return None
-    
-    query_model = next(query_struct.get_models())
-    ecoli_model = next(ecoli_struct.get_models())
-    
-    query_atoms = list(query_model.get_atoms())
-    ecoli_atoms = list(ecoli_model.get_atoms())
-    
-    n_atoms = min(len(query_atoms), len(ecoli_atoms))
-    if n_atoms == 0:
-        print("No atoms found for comparison.")
-        return None
-    
-    query_atoms = query_atoms[:n_atoms]
-    ecoli_atoms = ecoli_atoms[:n_atoms]
-    
-    sup = Superimposer()
-    sup.set_atoms(ecoli_atoms, query_atoms)
-    return sup.rms
+def compute_rmse(query_file, ecoli_file):
+    cmd.reinitialize()
+
+    query_obj = "query"
+    ecoli_obj = "ecoli"
+    cmd.load(query_file, query_obj)
+    cmd.load(ecoli_file, ecoli_obj)
+
+    rms_tuple = cmd.super(query_obj, ecoli_obj)
+    rms_value = rms_tuple[0]
+    return rms_value
 
 if __name__ == "__main__":
     gb_accessions = list(genbank_ids)
@@ -209,26 +193,28 @@ if __name__ == "__main__":
     print("GO Feature Matrix:")
     print(df_go.head())
 
+    if os.path.exists("structures"):
+        shutil.rmtree("structures")
     os.makedirs("structures", exist_ok=True)
+    
     structure_files = {}
     for uid in uniprot_ids:
         file_path = download_structure_by_uniprot(uid, directory="structures")
         structure_files[uid] = file_path
         time.sleep(1)
     
-    ecoli_structure_file = os.path.join("structures", "e_coli_model.cif")
+    ecoli_structure_file = "e_coli_model.cif"
     if not os.path.exists(ecoli_structure_file):
         print("Warning: E. coli reference structure not found at", ecoli_structure_file)
     
     rmse_results = {}
     for uid, struct_file in structure_files.items():
         if struct_file is not None and os.path.exists(ecoli_structure_file):
-            rms = compute_rmse(struct_file, ecoli_structure_file)
-            rmse_results[uid] = rms
-            print(f"RMSE for {uid}: {rms}")
+            rmse = compute_rmse(struct_file, ecoli_structure_file)
+            rmse_results[uid] = rmse
+            print(f"RMSE for {uid}: {rmse}")
         #else:
         #    rmse_results[uid] = None
-
 
     df_rmse = pd.DataFrame.from_dict(rmse_results, orient='index', columns=['RMSE'])
     df_rmse.index.name = "UniProtID"
