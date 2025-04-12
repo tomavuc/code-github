@@ -15,7 +15,7 @@ from collections import Counter
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.PDB import PDBList, PDBParser, Superimposer, MMCIFParser
 
-df = pd.read_csv('mydatabep-uniprot.csv')
+df = pd.read_csv('datasets/mydatabep-uniprot.csv')
 stop = 76
 organism_names = df.iloc[:stop, 0]
 genbank_ids = [gen.strip() for gen in df.iloc[:stop, 1].dropna().tolist()]
@@ -228,4 +228,4 @@ if __name__ == "__main__":
     print("Final Feature Matrix:")
     print(final_df.head())
     
-    final_df.to_csv("final_feature_matrix.csv")
+    final_df.to_csv("datasets/final_feature_matrix_new.csv")

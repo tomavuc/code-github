@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split, KFold, GridSearchCV, cross_val_score, cross_val_predict
-from sklearn.impute import SimpleImputer 
+from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, confusion_matrix, classification_report, accuracy_score
 
 from parameter_grid import models_dict
@@ -15,33 +15,27 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 
-data = pd.read_csv('datasets/features.csv')
-final_feature_matrix = pd.read_csv('datasets/final_feature_matrix.csv')
+from utils import balance_and_split_data
 
-existing_ids = set(data['GenBankID'])
+balanced, remaining = balance_and_split_data('datasets/final_feature_matrix_new.csv')
 
-new_data = final_feature_matrix[~final_feature_matrix['GenBankID'].isin(existing_ids)]
-new_data.to_csv('datasets/new_data_only.csv', index=False)
-
-
-missing_per_column = data.isna().sum()
+missing_per_column = balanced.isna().sum()
 if missing_per_column.any():
-    print('There are missing points in the data we have to fill!')
+    print('There are missing points in the data we have to fill in the balanced matrix!')
 else:
     print('Data is full!')
 
 
-X_train = data.drop(columns=['GenBankID','UniProtID','pIspG','organism']) 
-y_train = data['pIspG']
+X_train = balanced.drop(columns=['GenBankID','UniProtID','pIspG','organism']) 
+y_train = balanced['pIspG']
 print(X_train)
 print(y_train)
 
 #X_train, X_val, y_train, y_val = train_test_split(X, y, test_size= 1/3, random_state=40)
 
-data2 = pd.read_csv('datasets/new_data_only.csv')
-X_test = data2.drop(columns=['GenBankID','UniProtID','pIspG','organism']) 
-y_test = data2['pIspG']
-missing_per_column = data2.isna().sum()
+X_test = remaining.drop(columns=['GenBankID','UniProtID','pIspG','organism']) 
+y_test = remaining['pIspG']
+missing_per_column = remaining.isna().sum()
 if missing_per_column.any():
     print('There are missing points in the data we have to fill!')
 else:

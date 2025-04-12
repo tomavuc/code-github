@@ -12,8 +12,9 @@ from sklearn.metrics import mean_absolute_error, confusion_matrix, classificatio
 from parameter_grid import models_dict
 
 #Data Loading (After generation)
-data = pd.read_csv('final_feature_matrix.csv')
+data = pd.read_csv('datasets/final_feature_matrix.csv')
 data.head()
+data['pIspG'] = data['pIspG'].replace({'+/-': '+'})
 
 missing_per_column = data.isna().sum()
 if missing_per_column.any():
@@ -23,7 +24,7 @@ else:
 
 X = data.drop(columns=['GenBankID','UniProtID','pIspG','organism']) 
 y = data['pIspG']
-y = LabelEncoder().fit_transform(y)
+#y = LabelEncoder().fit_transform(y)
 print(y)
 
 outer_cv = KFold(n_splits = 3, shuffle=True, random_state=42)
@@ -42,15 +43,13 @@ for name, (model, params) in models_dict.items():
     results[name] = {"mean_accuracy": np.mean(scores), "std_accuracy": np.std(scores)}
     print(f"Model: {name}, Mean Accuracy: {np.mean(scores):.4f}, Std: {np.std(scores):.4f}")
 
+    y_pred = cross_val_predict(grid, X, y, cv=outer_cv, n_jobs=-1)
+
+    print("\nClassification Report:")
+    print(classification_report(y, y_pred))
+
 
 print("\nNested CV Results:")
 for model_name, metrics in results.items():
     print(model_name, metrics)
-
-# Generate predictions using cross_val_predict (outer CV)
-print(grid)
-y_pred = cross_val_predict(grid, X, y, cv=outer_cv, n_jobs=-1)
-
-print("\nClassification Report:")
-print(classification_report(y, y_pred))
 
