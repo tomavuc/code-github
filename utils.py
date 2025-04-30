@@ -1,4 +1,6 @@
 import pandas as pd
+import os
+from Bio.PDB import MMCIFParser, PDBIO
 
 def balance_and_split_data(input_path, random_state=42, ratio=1.5):
     df = pd.read_csv(input_path)
@@ -26,3 +28,29 @@ def balance_and_split_data(input_path, random_state=42, ratio=1.5):
     print(remaining_df['pIspG'].value_counts())
 
     return balanced_df, remaining_df
+
+
+def cif_to_pdb(cif_path: str,
+               output_dir: str = "converted_pdbs",
+               model_id: str = "model") -> str:
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Build the output filename: keep the cif basename, swap extension
+    base = os.path.splitext(os.path.basename(cif_path))[0]
+    pdb_filename = base + ".pdb"
+    pdb_path = os.path.join(output_dir, pdb_filename)
+
+    # Parse the CIF and write out PDB
+    parser = MMCIFParser(QUIET=True)
+    structure = parser.get_structure(model_id, cif_path)
+
+    io = PDBIO()
+    io.set_structure(structure)
+    io.save(pdb_path)
+
+    return pdb_path
+
+new_pdb = cif_to_pdb(cif_path="raw_data/fold_wp_012464304_1_with_flda_model_0.cif", output_dir="pdb_converted")
+print("Wrote PDB to:", new_pdb)
