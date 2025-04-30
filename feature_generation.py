@@ -34,6 +34,14 @@ for acc, value, org in zip(genbank_ids, pIspG_values, organism_names):
 
 Entrez.email = 'tomasinho7778@gmail.com'
 
+_atomic_masses = {
+    "H": 1.008,
+    "C": 12.011,
+    "N": 14.007,
+    "O": 15.999,
+    "S": 32.06,
+}
+
 # Sequence based features (GenBank)
 def fetch_records(accessions: list[str], batch_size: int):
     all_records = []
@@ -168,6 +176,8 @@ def download_structure_by_uniprot(uniprot_id, directory="."):
         print(f"No PDB structure found for {uniprot_id}, trying AlphaFold...")
         return download_alphafold_structure(uniprot_id, directory)
 
+# Calculating the RMSE between the protein of interest and the E. Coli
+
 def compute_rmse(query_file, ecoli_file):
     cmd.reinitialize()
 
@@ -179,6 +189,74 @@ def compute_rmse(query_file, ecoli_file):
     rms_tuple = cmd.super(query_obj, ecoli_obj)
     rms_value = rms_tuple[0]
     return rms_value
+
+# Calculating the opening of the binding site
+
+def get_uniprot_binding_sites(uniprot_id): 
+    uniprot_id = uniprot_id.strip()
+    url = f"https://rest.uniprot.org/uniprotkb/{uniprot_id}.json"
+    response = requests.get(url)
+    response.raise_for_status()
+    entry = response.json()
+
+    positions = []
+    for feat in entry.get("features", []):
+        if feat.get("type").upper() == "BINDING SITE":
+            loc = feat.get("location", {})
+            value = loc.get("start", {}).get("value")
+            if value is None:
+                continue
+            try:
+                positions.append(int(value))
+            except ValueError:
+                continue
+
+    if len(positions) < 4:
+        raise RuntimeError(f"UniProt {uniprot_id} has fewer than 4 binding‐site annotations: found {len(positions)}")
+    
+    positions_sorted = sorted(positions)
+    cys_sites = positions_sorted[:3]
+    glu_site  = positions_sorted[-1]
+
+    return {"CYS": cys_sites, "GLU": [glu_site]}
+
+def compute_binding_site_opening(cif_path, uniprot_id, chain_id="A"):
+    sites = get_uniprot_binding_sites(uniprot_id)
+    cys_resnums = sites["CYS"]
+    glu_resnums = sites["GLU"]
+    if len(cys_resnums) != 3 or len(glu_resnums) != 1:
+        raise ValueError(f"Expected 3 CYS and 1 GLU for {uniprot_id}, got {sites}")
+
+    parser = MMCIFParser()
+    struct_id = os.path.basename(cif_path).split('.')[0]
+    structure = parser.get_structure(struct_id, cif_path)
+    model = structure[0]
+    chain = model[chain_id]
+
+    def _collect_atoms(resnums):
+        masses = []
+        coords = []
+        for resnum in resnums:
+            res = chain[(' ', resnum, ' ')]
+            for atom in res:
+                elem = atom.element.strip()
+                m = _atomic_masses.get(elem)
+                if m is None:
+                    continue
+                masses.append(m)
+                coords.append(atom.coord)
+        if not masses:
+            raise ValueError(f"No atoms found for residues {resnums}")
+        masses = np.array(masses)
+        coords = np.array(coords)
+
+        com = (masses[:,None] * coords).sum(axis=0) / masses.sum()
+        return com
+
+    com_cys = _collect_atoms(cys_resnums)
+    com_glu = _collect_atoms(glu_resnums)
+    opening = np.linalg.norm(com_cys - com_glu)
+    return float(opening)
 
 if __name__ == "__main__":
     gb_accessions = list(genbank_ids)
@@ -216,6 +294,21 @@ if __name__ == "__main__":
         #else:
         #    rmse_results[uid] = None
 
+    opening_results = {}
+    for uid, cif_path in structure_files.items():
+        if cif_path and os.path.exists(cif_path):
+            try:
+                opening = compute_binding_site_opening(cif_path, uid, chain_id="A")
+            except Exception as e:
+                print(f"Could not compute opening for {uid}: {e}")
+                opening = None
+        else:
+            opening = None
+        opening_results[uid] = opening
+        time.sleep(1)
+
+    df_opening = pd.DataFrame.from_dict(opening_results, orient="index", columns=["binding_site_opening"]).reset_index().rename(columns={"index":"UniProtID"})
+
     df_rmse = pd.DataFrame.from_dict(rmse_results, orient='index', columns=['RMSE'])
     df_rmse.index.name = "UniProtID"
     df_rmse = df_rmse.reset_index() 
@@ -223,9 +316,9 @@ if __name__ == "__main__":
     df_structure = pd.merge(df_go, df_rmse, on="UniProtID", how="outer")
     merged_seq = pd.merge(map, df_seq, on="GenBankID", how="left")
 
-    final_df = pd.merge(merged_seq, df_structure.reset_index(), on="UniProtID", how="outer")
+    final_df = pd.merge(merged_seq, df_structure, on="UniProtID", how="outer").merge(df_opening, on="UniProtID", how="left")
 
     print("Final Feature Matrix:")
     print(final_df.head())
     
-    final_df.to_csv("datasets/final_feature_matrix_new.csv")
+    final_df.to_csv("datasets/final_feature_matrix_with_opening.csv")
