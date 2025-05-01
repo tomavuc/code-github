@@ -16,13 +16,6 @@ genbank_ids = [gen.strip() for gen in df.iloc[:stop, 1].dropna().tolist()]
 pIspG_values = df.iloc[:stop, 2]
 uniprot_ids = [uid.strip() for uid in df.iloc[:stop, 3].dropna().tolist()]
 
-map = pd.DataFrame()
-map['GenBankID'] = df.iloc[:stop, 1].astype(str).str.strip()
-map['UniProtID'] = df.iloc[:stop, 3].astype(str).str.strip()
-map['pIspG'] = df.iloc[:stop, 2]
-print("Mapping Table:")
-print(map.head())
-
 for acc, value, org in zip(genbank_ids, pIspG_values, organism_names):
     print(f"Organism: {org}, Accession Number: {acc}, pIspG: {value}")
 

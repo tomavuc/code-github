@@ -24,10 +24,9 @@ Entrez.email = 'tomasinho7778@gmail.com'
 # For example:
 gb_accessions = list(genbank_ids)
 records = fetch_records(gb_accessions, batch_size=10)
-# Here each record contains the protein sequence (accessible via record.seq)
 
 jobs = []
-# Sequence of Flavodoxin A, taken from E. Coli
+# Sequence of Flavodoxin A, taken from E. Coli as its PEC, can be changed
 flavo_seq = "MAITGIFFGSDTGNTENIAKMIQKQLGKDVADVHDIAKSSKEDLEAYDILLLGIPTWYYGEAQCDWDDFFPTLEEIDFNGKLVALFGCGDQEDYAEYFCDALGTIRDIIEPRGATIVGHWPTAGYHFEASKGLADDDHFVGLAIDEDRQPELTAERVEKWVKQISEELHLDEILNA"  
 
 jobs = []
