@@ -39,8 +39,7 @@ _atomic_masses = {
     "C": 12.011,
     "N": 14.007,
     "O": 15.999,
-    "S": 32.06,
-}
+    "S": 32.06}
 
 # Sequence based features (GenBank)
 def fetch_records(accessions: list[str], batch_size: int):

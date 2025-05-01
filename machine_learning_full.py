@@ -12,7 +12,7 @@ from sklearn.metrics import mean_absolute_error, confusion_matrix, classificatio
 from parameter_grid import models_dict
 
 #Data Loading (After generation)
-data = pd.read_csv('datasets/final_feature_matrix.csv')
+data = pd.read_csv('datasets/final_feature_matrix_new.csv')
 data.head()
 data['pIspG'] = data['pIspG'].replace({'+/-': '+'})
 
@@ -27,8 +27,8 @@ y = data['pIspG']
 #y = LabelEncoder().fit_transform(y)
 print(y)
 
-outer_cv = KFold(n_splits = 3, shuffle=True, random_state=42)
-inner_cv = KFold(n_splits = 3, shuffle=True, random_state=42)
+outer_cv = KFold(n_splits = 5, shuffle=True, random_state=42)
+inner_cv = KFold(n_splits = 4, shuffle=True, random_state=42)
 results = {}
 
 #Full pipeline (first try)
