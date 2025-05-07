@@ -3,6 +3,7 @@ import time
 import requests
 import re
 import shutil
+import gzip
 
 import pandas as pd
 import numpy as np
@@ -55,6 +56,29 @@ def fetch_records(accessions: list[str], batch_size: int):
         
         time.sleep(1)
     return all_records
+
+def save_sequences_fasta(records: list[SeqIO.SeqRecord],fasta_path: str,compress: bool = False,) -> str:
+    if not fasta_path.lower().endswith(".fasta"):
+        fasta_path += ".fasta"
+    if compress and not fasta_path.lower().endswith(".gz"):
+        fasta_path += ".gz"
+
+    # open the right handle
+    open_fn = gzip.open if compress else open
+    mode    = "wt"          # text mode, always
+    with open_fn(fasta_path, mode) as handle:
+        # Build cleaner headers so everything is on one line
+        for rec in records:
+            # Example header:
+            #   >ABF40425.1 4‑hydroxy‑3‑methylbut‑2‑en‑1‑yl diphosphate synthase [Candidatus Koribacter versatilis Ellin345]
+            acc   = rec.id               # e.g. "ABF40425.1"
+            descr = rec.annotations["organism"]     # full GenBank description
+            header = f"{acc} {descr.split(' ', 1)[1]}" if ' ' in descr else acc
+            handle.write(f">{header}\n")
+            handle.write(str(rec.seq) + "\n")
+
+    print(f"Wrote {len(records)} sequences to {os.path.abspath(fasta_path)}")
+    return os.path.abspath(fasta_path)
 
 def extract_seq_features(record) -> dict:
     seq = str(record.seq)
@@ -261,6 +285,7 @@ if __name__ == "__main__":
     gb_accessions = list(genbank_ids)
     batch_size = 1
     records = fetch_records(gb_accessions, batch_size)
+    save_sequences_fasta(records, fasta_path="ispG_fullset.fasta", compress=False)
     seq_features = [extract_seq_features(record) for record in records]
     df_seq = pd.DataFrame(seq_features)
     print("Sequence Features:")
