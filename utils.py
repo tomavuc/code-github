@@ -1,5 +1,6 @@
 import pandas as pd
-import os
+import os, csv
+from pathlib import Path
 from Bio.PDB import MMCIFParser, PDBIO
 
 def balance_and_split_data(input_path, random_state=42, ratio=1.5):
@@ -30,27 +31,38 @@ def balance_and_split_data(input_path, random_state=42, ratio=1.5):
     return balanced_df, remaining_df
 
 
-def cif_to_pdb(cif_path: str,
-               output_dir: str = "converted_pdbs",
-               model_id: str = "model") -> str:
+def convert_all_cif_to_pdb(input_folder: str,
+                            output_dir: str = "converted_pdbs",
+                            model_id: str = "model") -> list[str]:
+    input_path = Path(input_folder)
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
     
-    # Ensure output directory exists
-    os.makedirs(output_dir, exist_ok=True)
-
-    # Build the output filename: keep the cif basename, swap extension
-    base = os.path.splitext(os.path.basename(cif_path))[0]
-    pdb_filename = base + ".pdb"
-    pdb_path = os.path.join(output_dir, pdb_filename)
-
-    # Parse the CIF and write out PDB
     parser = MMCIFParser(QUIET=True)
-    structure = parser.get_structure(model_id, cif_path)
-
     io = PDBIO()
-    io.set_structure(structure)
-    io.save(pdb_path)
+    
+    pdb_paths = []
+    for cif_file in input_path.iterdir():
+        if cif_file.suffix.lower() == ".cif" and cif_file.is_file():
+            base = cif_file.stem
+            pdb_file = output_path / f"{base}.pdb"
+            structure = parser.get_structure(model_id, str(cif_file))
+            io.set_structure(structure)
+            io.save(str(pdb_file))
+            pdb_paths.append(str(pdb_file))
+    return pdb_paths
 
-    return pdb_path
 
-new_pdb = cif_to_pdb(cif_path="raw_data/fold_wp_012464304_1_with_flda_model_0.cif", output_dir="pdb_converted")
-print("Wrote PDB to:", new_pdb)
+def make_affinity_csv(folder: str,
+                      out_csv: str = "binding_affinities.csv") -> None:
+
+    path = Path(folder)
+    with open(out_csv, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["file_name", "binding_affinity"]);
+        for file in sorted(path.iterdir()):
+            if file.is_file():
+                writer.writerow([file.name, 0])
+
+pdbs = convert_all_cif_to_pdb("dimers_with_pec", output_dir="pdb_converted")
+make_affinity_csv("pdb_converted", out_csv="binding_affinities.csv")
