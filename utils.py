@@ -59,10 +59,10 @@ def make_affinity_csv(folder: str,
     path = Path(folder)
     with open(out_csv, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["file_name", "binding_affinity"]);
+        writer.writerow(["ID", "measurement_value"])
         for file in sorted(path.iterdir()):
             if file.is_file():
                 writer.writerow([file.name, 0])
 
-pdbs = convert_all_cif_to_pdb("dimers_with_pec", output_dir="pdb_converted")
-make_affinity_csv("pdb_converted", out_csv="binding_affinities.csv")
+pdbs = convert_all_cif_to_pdb("fordeeprank_A", output_dir="pdb_converted_A")
+make_affinity_csv("pdb_converted_A", out_csv="binding_affinities_A.csv")
