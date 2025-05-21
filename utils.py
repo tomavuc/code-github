@@ -1,7 +1,8 @@
 import pandas as pd
 import os, csv
 from pathlib import Path
-from Bio.PDB import MMCIFParser, PDBIO
+from Bio.PDB import MMCIFParser, PDBIO, PDBParser, MMCIFIO
+import glob
 
 def balance_and_split_data(input_path, random_state=42, ratio=1.5):
     df = pd.read_csv(input_path)
@@ -64,5 +65,40 @@ def make_affinity_csv(folder: str,
             if file.is_file():
                 writer.writerow([file.stem, 0])
 
-pdbs = convert_all_cif_to_pdb("fordeeprank_A", output_dir="pdb_converted_A")
-make_affinity_csv("pdb_converted_A", out_csv="binding_affinities_A.csv")
+def merge_chains(input_file: str, output_file: str):
+    parser = MMCIFParser(QUIET=True) if input_file.endswith(".cif") else PDBParser(QUIET=True)
+    structure = parser.get_structure("model", input_file)
+
+    model = structure[0]
+    if "A" not in model or "B" not in model:
+        print(f"[skip] {input_file} – chains A and B not both present")
+
+    chainA, chainB = model["A"], model["B"]
+
+    # residue offset = last residue number in chain A
+    offset = chainA.get_list()[-1].id[1]
+
+    # move residues from B to A with new numbers
+    for res in chainB.get_residues():
+        het, seq, icode = res.id                    # (' ', 1, ' ')
+        res.id = (het, seq + offset, icode)         # bump number
+        chainA.add(res)
+    model.detach_child("B")                         # drop old chain B
+
+    # write out as mmCIF
+    io = MMCIFIO()
+    io.set_structure(structure)
+    io.save(output_file)
+    print(f"[ok]  {input_file}  →  {output_file}")
+
+
+#for filepath in glob.glob("dimers_test/*"):
+#    merge_chains(filepath, filepath.replace('.cif', '_merged.cif'))
+
+#folder = Path("dimers_test")
+#for f in folder.iterdir():
+#    if f.is_file() and not f.name.endswith("_merged.cif"):
+#        f.unlink()  
+
+pdbs = convert_all_cif_to_pdb("dimers_test", output_dir="pdb_converted")
+make_affinity_csv("pdb_converted", out_csv="binding_affinities_dimers.csv")
