@@ -22,7 +22,7 @@ for acc, value, org in zip(genbank_ids, pIspG_values, organism_names):
 Entrez.email = 'tomasinho7778@gmail.com'
 
 # For example:
-gb_accessions = list(genbank_ids)
+gb_accessions = list(genbank_ids)[-2:]
 records = fetch_records(gb_accessions, batch_size=10)
 
 jobs = []

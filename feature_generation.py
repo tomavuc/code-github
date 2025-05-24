@@ -17,7 +17,7 @@ from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.PDB import PDBList, PDBParser, Superimposer, MMCIFParser
 
 df = pd.read_csv('datasets/mydatabep-uniprot.csv')
-stop = 76
+stop = 78
 organism_names = df.iloc[:stop, 0]
 genbank_ids = [gen.strip() for gen in df.iloc[:stop, 1].dropna().tolist()]
 pIspG_values = df.iloc[:stop, 2]
