@@ -3,10 +3,11 @@ import math, csv, sys
 from collections import Counter
 from Bio import AlignIO, Align
 
-align_file = "ispG.aln-clustalw"
+align_file = "ispG_full.aln-clustalw"
 ref_id = "AAC75568.1"
 
-motif_cols = [814, 817, 862, 869] #make sure to put them -1 of what you see in the alignment output file
+#make sure to put them -1 of what you see in the alignment output file
+motif_cols = [809, 812, 860, 867] #[814, 817, 862, 869] this is for the previous alignment 
 window = 30  # expand ± this many columns around motifs
 lowest_entropy = 50 # number of top‐entropy sites to penalize
 nonzero = 1e-9
@@ -52,7 +53,7 @@ nonbind = [i for i in range(L) if (i not in binding_cols and ecoli.seq[i] != '-'
 lowest_entropy_cols = sorted(nonbind, key=lambda i: entropy[i])[:lowest_entropy] #put reverse=True if I want the opposite
 
 # 7) build & write the feature matrix
-with open("ispG_MSA_features.csv", "w", newline="") as outf:
+with open("ispG_MSA_features_full.csv", "w", newline="") as outf:
     w = csv.writer(outf)
     w.writerow([
         "id",

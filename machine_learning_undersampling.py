@@ -25,7 +25,6 @@ if missing_per_column.any():
 else:
     print('Data is full!')
 
-
 X_train = balanced.drop(columns=['GenBankID','UniProtID','pIspG','organism']) 
 y_train = balanced['pIspG']
 print(X_train)
@@ -33,7 +32,7 @@ print(y_train)
 
 #X_train, X_val, y_train, y_val = train_test_split(X, y, test_size= 1/3, random_state=40)
 
-X_test = remaining.drop(columns=['GenBankID','UniProtID','pIspG','organism']) 
+X_test = remaining.drop(columns=['id','UniProtID','pIspG','organism']) 
 y_test = remaining['pIspG']
 missing_per_column = remaining.isna().sum()
 if missing_per_column.any():
@@ -48,21 +47,7 @@ pipe = Pipeline([('scaler', StandardScaler())])
 X_train_scaled = pipe.fit_transform(X_train)
 X_test_scaled = pipe.transform(X_test)
 
-# def train_and_evaluate(model, X_train, X_test, y_train, y_test, pipeline_name):
-#     model.fit(X_train, y_train)
-#     train_predictions = model.predict(X_train)
-#     test_predictions = model.predict(X_test)
-
-#     train_acc = accuracy_score(y_train, train_predictions)
-#     test_acc = accuracy_score(y_test, test_predictions)
-
-#     print(f'\n{pipeline_name} - Train MAE: {train_acc:.4f}, Test MAE: {test_acc:.4f}')
-#     print("\nClassification Report for Test Data:")
-#     print(classification_report(y_test, test_predictions))
-#     return model
-
 def tune_and_evaluate(model, param_grid, pipeline_name):
-    # Create a pipeline that includes scaling and the classifier
     pipe = Pipeline([
         ('imputer', SimpleImputer(strategy = 'mean')),
         ('scaler', StandardScaler()),

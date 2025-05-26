@@ -32,7 +32,7 @@ def parse_array(cell):
         return result
     return []
 
-file = "merged_features_C_residue_new.csv"
+file = "merged_features_C_residue_full.csv"
 df = pd.read_csv(file)
 new_df = pd.DataFrame({"id": df["id"].apply(extract_accession)})
 
@@ -47,13 +47,13 @@ new_df["sasa"] = np.round(sasa_arrays.apply(sum), 2)
 res_type_cols = [r for r in df.columns if r.startswith("res_type_")]
 for r in res_type_cols:
     arrs = df[r].apply(parse_array)
-    new_df[f"{r}_pct"] = arrs.apply(lambda a: sum(a)/len(a) if a else 0)
+    new_df[f"{r}_pct"] = arrs.apply(lambda a: np.mean(a) if a else 0)
 
 # polarity occupancy
 polarity_cols = [p for p in df.columns if p.startswith("polarity_")]
 for p in polarity_cols:
     arrs = df[p].apply(parse_array)
-    new_df[f"{p}_pct"] = arrs.apply(lambda a: sum(a)/len(a) if a else 0)
+    new_df[f"{p}_pct"] = arrs.apply(lambda a: np.mean(a) if a else 0)
 
 # continuous sums (without bsa and sasa)
 for feat in ["res_size", "res_mass", "res_charge", "hb_acceptors", "hb_donors"]:

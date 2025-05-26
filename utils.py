@@ -31,7 +31,6 @@ def balance_and_split_data(input_path, random_state=42, ratio=1.5):
 
     return balanced_df, remaining_df
 
-
 def convert_all_cif_to_pdb(input_folder: str,
                             output_dir: str = "converted_pdbs",
                             model_id: str = "model") -> list[str]:
@@ -52,7 +51,6 @@ def convert_all_cif_to_pdb(input_folder: str,
             io.save(str(pdb_file))
             pdb_paths.append(str(pdb_file))
     return pdb_paths
-
 
 def make_affinity_csv(folder: str,
                       out_csv: str = "binding_affinities.csv") -> None:
@@ -80,10 +78,10 @@ def merge_chains(input_file: str, output_file: str):
 
     # move residues from B to A with new numbers
     for res in chainB.get_residues():
-        het, seq, icode = res.id                    # (' ', 1, ' ')
-        res.id = (het, seq + offset, icode)         # bump number
+        het, seq, icode = res.id
+        res.id = (het, seq + offset, icode)
         chainA.add(res)
-    model.detach_child("B")                         # drop old chain B
+    model.detach_child("B")
 
     # write out as mmCIF
     io = MMCIFIO()
@@ -91,14 +89,25 @@ def merge_chains(input_file: str, output_file: str):
     io.save(output_file)
     print(f"[ok]  {input_file}  →  {output_file}")
 
+# for filepath in glob.glob("dimers_test/*"):
+#     merge_chains(filepath, filepath.replace('.cif', '_merged.cif'))
 
-#for filepath in glob.glob("dimers_test/*"):
-#    merge_chains(filepath, filepath.replace('.cif', '_merged.cif'))
+# folder = Path("dimers_test")
+# for f in folder.iterdir():
+#     if f.is_file() and not f.name.endswith("_merged.cif"):
+#         f.unlink()  
 
-#folder = Path("dimers_test")
-#for f in folder.iterdir():
-#    if f.is_file() and not f.name.endswith("_merged.cif"):
-#        f.unlink()  
+# pdbs = convert_all_cif_to_pdb("dimers_test", output_dir="pdb_converted")
+# make_affinity_csv("pdb_converted", out_csv="binding_affinities_dimers.csv")
 
-pdbs = convert_all_cif_to_pdb("dimers_test", output_dir="pdb_converted")
-make_affinity_csv("pdb_converted", out_csv="binding_affinities_dimers.csv")
+basic_features = pd.read_csv('datasets/final_feature_matrix_with_opening.csv')
+msa_features = pd.read_csv('ispG_MSA_features_full.csv')
+deeprank_features = pd.read_csv('deeprank_features.csv')
+
+new = basic_features.rename(columns={'GenBankID': 'id'})
+# 2) First merge: left ↔ middle
+merged = msa_features.merge(deeprank_features, on='id', how= 'inner', suffixes=("_msa", ""))
+merged = merged.merge(new, on='id', how='inner', suffixes=("", "_gb"))
+
+#merged.to_csv("all_merged.csv", index = False)
+print(merged.head())

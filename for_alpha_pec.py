@@ -7,7 +7,7 @@ import re
 import pandas as pd
 
 from Bio import Entrez, SeqIO
-from feature_generation import fetch_records
+from feature_generation_new import fetch_records
 
 df = pd.read_csv('datasets/mydatabep-uniprot.csv')
 stop = 76
@@ -22,7 +22,7 @@ for acc, value, org in zip(genbank_ids, pIspG_values, organism_names):
 Entrez.email = 'tomasinho7778@gmail.com'
 
 # For example:
-gb_accessions = list(genbank_ids)[-2:]
+gb_accessions = list(genbank_ids)#[-2:]
 records = fetch_records(gb_accessions, batch_size=10)
 
 jobs = []

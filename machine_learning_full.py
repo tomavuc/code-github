@@ -12,7 +12,7 @@ from sklearn.metrics import mean_absolute_error, confusion_matrix, classificatio
 from parameter_grid import models_dict
 
 #Data Loading (After generation)
-data = pd.read_csv('datasets/final_feature_matrix_new.csv')
+data = pd.read_csv('all_merged.csv')
 data.head()
 data['pIspG'] = data['pIspG'].replace({'+/-': '+'})
 
@@ -22,7 +22,7 @@ if missing_per_column.any():
 else:
     print('Data is full!')
 
-X = data.drop(columns=['GenBankID','UniProtID','pIspG','organism']) 
+X = data.drop(columns=['id','UniProtID','pIspG','organism']) 
 y = data['pIspG']
 #y = LabelEncoder().fit_transform(y)
 print(y)
@@ -36,9 +36,9 @@ for name, (model, params) in models_dict.items():
     pipe = Pipeline([('imputer', SimpleImputer(strategy = "mean")), ('scaler', StandardScaler()), ("classifier", model)])
 
     print(f"Grid search started for {name}")
-    grid = GridSearchCV(pipe, param_grid = params, cv = inner_cv, scoring = "accuracy", n_jobs = -1)
+    grid = GridSearchCV(pipe, param_grid = params, cv = inner_cv, scoring = "balanced_accuracy", n_jobs = -1)
 
-    scores = cross_val_score(grid, X, y, cv = outer_cv, scoring = "accuracy", n_jobs = -1)
+    scores = cross_val_score(grid, X, y, cv = outer_cv, scoring = "balanced_accuracy", n_jobs = -1)
 
     results[name] = {"mean_accuracy": np.mean(scores), "std_accuracy": np.std(scores)}
     print(f"Model: {name}, Mean Accuracy: {np.mean(scores):.4f}, Std: {np.std(scores):.4f}")
@@ -47,7 +47,6 @@ for name, (model, params) in models_dict.items():
 
     print("\nClassification Report:")
     print(classification_report(y, y_pred))
-
 
 print("\nNested CV Results:")
 for model_name, metrics in results.items():
