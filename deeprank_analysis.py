@@ -92,13 +92,13 @@ same_chain = df["same_chain"].apply(parse_array)
 electro = df["electrostatic"].apply(parse_array)
 vdw = df["vanderwaals"].apply(parse_array)
 
-new_df["electrostatic_inter_sum"] = [
-    np.round(sum(e for e, sc in zip(elec, scs) if sc == 0), 2)
-    for elec, scs in zip(electro, same_chain)]
+#new_df["electrostatic_inter_sum"] = [
+ #   np.round(sum(e for e, sc in zip(elec, scs) if sc == 0), 2)
+  #  for elec, scs in zip(electro, same_chain)]
 
-new_df["vanderwaals_inter_sum"] = [
-    np.round(sum(v for v, sc in zip(vd, scs) if sc == 0), 2)
-    for vd, scs in zip(vdw, same_chain)]
+#new_df["vanderwaals_inter_sum"] = [
+ #   np.round(sum(v for v, sc in zip(vd, scs) if sc == 0), 2)
+  #  for vd, scs in zip(vdw, same_chain)]
 
 print(new_df.head)
 new_df.to_csv("deeprank_features.csv", index=False)

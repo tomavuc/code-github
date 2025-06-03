@@ -23,7 +23,7 @@ models_dict = {
         "classifier__loss": ["hinge", "log_loss", "huber"],
         "classifier__penalty": ['l2', 'l1', 'elasticnet'],
         "classifier__learning_rate": ['constant', 'optimal', 'invscaling'],
-        "classifier__eta0": [0, 0.01, 0.1, 1],
+        "classifier__eta0": [0.0, 0.01, 0.1, 1.0],
         "classifier__early_stopping": [True, False]},
     ],
     "SVM": [
@@ -38,7 +38,7 @@ models_dict = {
         {"classifier__criterion": ["gini", "log_loss", "entropy"],
         "classifier__max_depth": [None, 5, 10, 15],
         "classifier__min_samples_split": [2, 3, 5],
-        "classifier__max_features": ["sqrt", "log2", None]
+        "classifier__max_features": ["sqrt", "log2", None, 30, 50, 70]
         },
     ],
     "RF": [
@@ -47,7 +47,7 @@ models_dict = {
         "classifier__n_estimators": [50, 100, 150, 200],
         "classifier__max_depth": [None, 5, 10, 15],
         "classifier__min_samples_split": [2, 3, 5],
-        "classifier__max_features": ["sqrt", "log2", None]},
+        "classifier__max_features": ["sqrt", "log2", None, 30, 50, 70]},
     ]#,
     #"XGB": [
         #XGBClassifier(eval_metric='logloss', random_state=42),

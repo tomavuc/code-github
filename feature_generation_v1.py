@@ -16,32 +16,6 @@ from collections import Counter
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.PDB import PDBList, PDBParser, Superimposer, MMCIFParser
 
-df = pd.read_csv('datasets/mydatabep-uniprot.csv')
-stop = 78
-organism_names = df.iloc[:stop, 0]
-genbank_ids = [gen.strip() for gen in df.iloc[:stop, 1].dropna().tolist()]
-pIspG_values = df.iloc[:stop, 2]
-uniprot_ids = [uid.strip() for uid in df.iloc[:stop, 3].dropna().tolist()]
-
-map = pd.DataFrame()
-map['GenBankID'] = df.iloc[:stop, 1].astype(str).str.strip()
-map['UniProtID'] = df.iloc[:stop, 3].astype(str).str.strip()
-map['pIspG'] = df.iloc[:stop, 2]
-print("Mapping Table:")
-print(map.head())
-
-for acc, value, org in zip(genbank_ids, pIspG_values, organism_names):
-    print(f"Organism: {org}, Accession Number: {acc}, pIspG: {value}")
-
-Entrez.email = 'tomasinho7778@gmail.com'
-
-_atomic_masses = {
-    "H": 1.008,
-    "C": 12.011,
-    "N": 14.007,
-    "O": 15.999,
-    "S": 32.06}
-
 # Sequence based features (GenBank)
 def fetch_records(accessions: list[str], batch_size: int):
     all_records = []
@@ -215,7 +189,9 @@ def compute_rmse(query_file, ecoli_file):
 
 # Calculating the opening of the binding site
 
-def get_uniprot_binding_sites(uniprot_id): 
+def get_uniprot_binding_sites(uniprot_id, id_map, use_map):
+    if use_map == True:
+        uniprot_id = id_map.loc[id_map['GenBankID'] == str(uniprot_id), 'UniProtID'] 
     uniprot_id = uniprot_id.strip()
     url = f"https://rest.uniprot.org/uniprotkb/{uniprot_id}.json"
     response = requests.get(url)
@@ -282,6 +258,33 @@ def compute_binding_site_opening(cif_path, uniprot_id, chain_id="A"):
     return float(opening)
 
 if __name__ == "__main__":
+    df = pd.read_csv('datasets/mydatabep-uniprot.csv')
+    stop = 78
+    organism_names = df.iloc[:stop, 0]
+    genbank_ids = [gen.strip() for gen in df.iloc[:stop, 1].dropna().tolist()]
+    pIspG_values = df.iloc[:stop, 2]
+    uniprot_ids = [uid.strip() for uid in df.iloc[:stop, 3].dropna().tolist()]
+
+    map = pd.DataFrame()
+    map['GenBankID'] = df.iloc[:stop, 1].astype(str).str.strip()
+    map['UniProtID'] = df.iloc[:stop, 3].astype(str).str.strip()
+    map['pIspG'] = df.iloc[:stop, 2]
+    print("Mapping Table:")
+    print(map.head())
+
+    for acc, value, org in zip(genbank_ids, pIspG_values, organism_names):
+        print(f"Organism: {org}, Accession Number: {acc}, pIspG: {value}")
+
+    Entrez.email = 'tomasinho7778@gmail.com'
+
+    _atomic_masses = {
+        "H": 1.008,
+        "C": 12.011,
+        "N": 14.007,
+        "O": 15.999,
+        "S": 32.06}
+
+
     gb_accessions = list(genbank_ids)
     batch_size = 1
     records = fetch_records(gb_accessions, batch_size)

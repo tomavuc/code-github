@@ -8,7 +8,7 @@ ref_id = "AAC75568.1"
 
 #make sure to put them -1 of what you see in the alignment output file
 motif_cols = [809, 812, 860, 867] #[814, 817, 862, 869] this is for the previous alignment 
-window = 30  # expand ± this many columns around motifs
+window = 25  # expand ± this many columns around motifs
 lowest_entropy = 50 # number of top‐entropy sites to penalize
 nonzero = 1e-9
 
@@ -87,4 +87,4 @@ with open("ispG_MSA_features_full.csv", "w", newline="") as outf:
             gaps_bind
         ])
 
-print(f"ispG_MSA_features.csv generated for {len(aln)} sequences.")
+print(f"ispG_MSA_features_full.csv generated for {len(aln)} sequences.")
