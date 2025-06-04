@@ -108,9 +108,9 @@ print(phylo_tree)
 
 new = basic_features.rename(columns={'GenBankID': 'id'})
 # 2) First merge: left ↔ middle
-#merged = msa_features.merge(deeprank_features, on='id', how= 'inner', suffixes=("_msa", ""))
-merged = msa_features.merge(new, on='id', how='inner', suffixes=("", "_gb"))
+merged = msa_features.merge(deeprank_features, on='id', how= 'inner', suffixes=("_msa", ""))
+merged = merged.merge(new, on='id', how='inner', suffixes=("", "_gb"))
 merged = merged.merge(phylo_tree, on = 'id', how = 'inner')
 
-merged.to_csv("all_merged_wo_deeprank.csv", index = False)
+merged.to_csv("all_merged.csv", index = False)
 print(merged.head())

@@ -11,7 +11,7 @@ from sklearn.metrics import mean_absolute_error, confusion_matrix, classificatio
 from parameter_grid import models_dict
 
 #Data Loading (After generation)
-data = pd.read_csv('all_merged_wo_deeprank.csv')
+data = pd.read_csv('all_merged.csv')
 data.head()
 data['pIspG'] = data['pIspG'].replace({'+/-': '+'})
 data['pIspG'] = data['pIspG'].replace({'+': 1, '-': 0})
@@ -22,7 +22,9 @@ if missing_per_column.any():
 else:
     print('Data is full!')
 
-X = data.drop(columns=['id','UniProtID','pIspG','organism']) 
+X = data.drop(columns=['id','UniProtID','pIspG','organism'])
+top_feats = ['length', 'molecular_weight', 'pid_total', 'irc_negative_positive_sum', 'aa_S', 'res_type_7_pct', 'isoelectric_point', 'aa_L', 'res_charge_sum', 'CL_FLDA_B', 'CL_FLDA_A', 'GO:0046872', 'GO:0005506', 'RMSE', 'aa_Q', 'polarity_2_pct', 'penalty_top50', 'res_type_9_pct', 'aa_R', 'res_charge_negative_sum']
+X = X[top_feats] 
 y = data['pIspG']
 #y = LabelEncoder().fit_transform(y)
 print(y)
