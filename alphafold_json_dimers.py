@@ -7,7 +7,7 @@ import re
 import pandas as pd
 
 from Bio import Entrez, SeqIO
-from feature_generation_new import fetch_records
+from feature_generation_v2 import fetch_records
 
 df = pd.read_csv('datasets/mydatabep-uniprot.csv')
 stop = 76
@@ -58,7 +58,6 @@ for i, record in enumerate(records):
     }
     jobs.append(job)
 
-# Write the JSON file with all the job definitions
 with open("batch_jobs.json", "w") as outfile:
     json.dump(jobs, outfile, indent=2)
 

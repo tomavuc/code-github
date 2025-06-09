@@ -1,20 +1,54 @@
 import os
 import time
 import requests
-import re
-import shutil
 import gzip
 
 import pandas as pd
 import numpy as np
 
 from pymol import cmd
+from collections import Counter
 from Bio import Entrez, SeqIO
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from Bio.SeqUtils import molecular_weight
-from collections import Counter
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
-from Bio.PDB import PDBList, PDBParser, Superimposer, MMCIFParser
+from Bio.PDB import MMCIFParser
+
+_aminoacids_key = {
+        "CYS": "C",
+        "ASP": "D",
+        "SER": "S",
+        "GLN": "Q",
+        "LYS": "K",
+        "ILE": "I",
+        "PRO": "P",
+        "THR": "T",
+        "PHE": "F",
+        "ASN": "N",
+        "GLY": "G",
+        "HIS": "H",
+        "LEU": "L",
+        "ARG": "R",
+        "TRP": "W",
+        "ALA": "A",
+        "VAL": "V",
+        "GLU": "E",
+        "TYR": "Y",
+        "MET": "M"}
+
+_atomic_masses = {
+        "H": 1.008,
+        "C": 12.011,
+        "N": 14.007,
+        "O": 15.999,
+        "S": 32.06,
+        "Se": 78.96,
+        "P": 30.973}
+    
+# binding site, as indicated in UniProt
+FLDA_POSITIONS = (list(range(10,16))+ list(range(56,61)) + [90] + list(range(94,100)) + [147])
 
 # Sequence based features (GenBank)
 def fetch_records(accessions: list[str], batch_size: int):
@@ -147,7 +181,7 @@ def get_uniprot_binding_sites(uniprot_id, id_map, use_map):
         matches = id_map.loc[id_map['GenBankID'] == str(uniprot_id), 'UniProtID']
         uniprot_id = matches.iloc[0]  
     uniprot_id = uniprot_id.strip()
-    print(old, uniprot_id)
+    #print(old, uniprot_id)
 
     try:
         url = f"https://rest.uniprot.org/uniprotkb/{uniprot_id}.json"
@@ -246,6 +280,48 @@ def compute_cluster_flda_distance(cif_path, gb_id, id_map=None, cluster_chains=(
     
     return (d1,d2) if cluster_chains[0]==i1 else (d2,d1)
 
+def compute_sphere_features(cif_path: str, gb_id: str, radius: float = 10.0, chain_ids = ("A", "B"), prefix = f"Sphere10", key = _aminoacids_key):
+    parser = MMCIFParser()
+    struct_id = os.path.basename(cif_path).split('.')[0]
+    structure = parser.get_structure(struct_id, cif_path)
+    model = structure[0]
+
+    sites = get_uniprot_binding_sites(gb_id, id_map=map, use_map=True)
+    cluster_res = sites["CYS"] + sites["GLU"]
+    per_chain_dicts = []
+    
+    for chain_id in chain_ids:
+        chain  = model[chain_id]
+        centre = compute_com(chain, cluster_res)
+        selected = []
+        for res in chain:
+            if res.id[0] != ' ':
+                continue
+            for atom in res:
+                if np.linalg.norm(atom.coord - centre) <= radius:
+                    selected.append(res)
+                    break
+
+        if not selected:
+            per_chain_dicts.append({f"{prefix}_EMPTY": 1})
+            continue
+        
+        seq = "".join(key[res.resname] for res in selected)
+        print(seq)
+        record = SeqRecord(Seq(seq), id=f"{chain_id}_sphere")
+        print(record)
+
+        feats = extract_seq_features(record)
+        for k in ("isoelectric_point", "aromaticity", "instability_index", "organism", "GenBankID"):
+            feats.pop(k, None)
+
+        per_chain_dicts.append({f"{prefix}_{k}": v for k, v in feats.items()})
+
+    # 4. average across chains
+    df_tmp = pd.DataFrame(per_chain_dicts).fillna(0)
+    mean_feats = df_tmp.mean(axis=0).to_dict()
+    return mean_feats
+
 def load_dimers(folder):
     structures = {}
     for fname in os.listdir(folder):
@@ -288,18 +364,6 @@ if __name__ == "__main__":
 
     Entrez.email = 'tomasinho7778@gmail.com'
 
-    _atomic_masses = {
-        "H": 1.008,
-        "C": 12.011,
-        "N": 14.007,
-        "O": 15.999,
-        "S": 32.06,
-        "Se": 78.96,
-        "P": 30.973}
-    
-    # binding site, as indicated in UniProt
-    FLDA_POSITIONS = (list(range(10,16))+ list(range(56,61)) + [90] + list(range(94,100)) + [147])
-
     gb_accessions = list(genbank_ids)
     batch_size = 1
     records = fetch_records(gb_accessions, batch_size)
@@ -323,6 +387,7 @@ if __name__ == "__main__":
     
     rmse_results = {}
     opening_results = {}
+    sphere_results = {}
     for model_key, gb_id in dimers.items():
         cif_path = os.path.join(dimer_dir, f"{model_key}_dimer_model_0.cif")
         if os.path.exists(cif_path) and os.path.exists(ref_structure_file):
@@ -332,15 +397,24 @@ if __name__ == "__main__":
             except Exception as e:
                 print(f"Could not compute opening for {gb_id}: {e}")
                 opening_results[gb_id] = None
+            try:
+                sphere_results[gb_id] = compute_sphere_features(cif_path, gb_id, radius=10.0)
+            except Exception as e:
+                print(f"Sphere-feature extraction failed for {gb_id}: {e}")
+                sphere_results[gb_id] = {}
         else:
             rmse_results[gb_id] = None
             opening_results[gb_id] = None
+            sphere_results[gb_id] = None
 
     df_rmse = pd.DataFrame.from_dict(rmse_results, orient='index', columns=['RMSE'])
     df_rmse = df_rmse.reset_index().rename(columns={'index':'GenBankID'})
 
     df_opening = pd.DataFrame.from_dict(opening_results, orient='index', columns=['binding_site_opening'])
     df_opening = df_opening.reset_index().rename(columns={'index':'GenBankID'})
+
+    df_sphere = pd.DataFrame.from_dict(sphere_results, orient='index')
+    df_sphere = df_sphere.reset_index().rename(columns={'index':'GenBankID'})
 
     # Distance of Fe-S site to binding site of fldA
     complex_dir = 'dimers_with_pec'
@@ -363,8 +437,9 @@ if __name__ == "__main__":
     before_df = pd.merge(merged_seq, merged_struct, on='GenBankID', how='left')
     distance_df = pd.merge(df_fldaA, df_fldaB, on='GenBankID', how='left')
     final_df = pd.merge(before_df, distance_df, on='GenBankID', how='left')
+    final_df = pd.merge(final_df, df_sphere, on = 'GenBankID', how = 'left')
 
     print("Final Feature Matrix:")
     print(final_df.head())
     os.makedirs('datasets', exist_ok=True)
-    final_df.to_csv("datasets/final_feature_matrix_v2.csv", index=False)
+    final_df.to_csv("datasets/final_feature_matrix_v3.csv", index=False)

@@ -1,8 +1,8 @@
 import pandas as pd
-import os, csv
+import csv
 from pathlib import Path
 from Bio.PDB import MMCIFParser, PDBIO, PDBParser, MMCIFIO
-import glob
+
 
 def balance_and_split_data(input_path, random_state=42, ratio=1.5):
     df = pd.read_csv(input_path)
@@ -19,8 +19,8 @@ def balance_and_split_data(input_path, random_state=42, ratio=1.5):
     balanced_df = pd.concat([positive_df, negative_sampled])
     balanced_df = balanced_df.sample(frac=1, random_state=random_state).reset_index(drop=True)
 
-    used_ids = set(balanced_df['GenBankID'])
-    remaining_df = df[~df['GenBankID'].isin(used_ids)].reset_index(drop=True)
+    used_ids = set(balanced_df['id'])
+    remaining_df = df[~df['id'].isin(used_ids)].reset_index(drop=True)
 
     print("Original distribution:")
     print(df['pIspG'].value_counts())
@@ -100,7 +100,7 @@ def merge_chains(input_file: str, output_file: str):
 # pdbs = convert_all_cif_to_pdb("dimers_test", output_dir="pdb_converted")
 # make_affinity_csv("pdb_converted", out_csv="binding_affinities_dimers.csv")
 
-basic_features = pd.read_csv('datasets/final_feature_matrix_v2.csv')
+basic_features = pd.read_csv('datasets/final_feature_matrix_v3.csv')
 msa_features = pd.read_csv('ispG_MSA_features_full.csv')
 deeprank_features = pd.read_csv('deeprank_features.csv')
 phylo_tree = pd.read_csv('ispG_distances_to_AAC75568.1.csv')
@@ -112,5 +112,5 @@ merged = msa_features.merge(deeprank_features, on='id', how= 'inner', suffixes=(
 merged = merged.merge(new, on='id', how='inner', suffixes=("", "_gb"))
 merged = merged.merge(phylo_tree, on = 'id', how = 'inner')
 
-merged.to_csv("all_merged.csv", index = False)
+merged.to_csv("all_merged_v2.csv", index = False)
 print(merged.head())

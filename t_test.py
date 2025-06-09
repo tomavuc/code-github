@@ -3,7 +3,6 @@ from __future__ import annotations
 import pandas as pd
 import numpy as np
 from scipy import stats
-from pathlib import Path
 
 def _load_df(csv_or_df):
     if isinstance(csv_or_df, pd.DataFrame):
@@ -67,5 +66,5 @@ def welch_t_test_feature_selection(
 
     return results, top_features
 
-stats_df, top = welch_t_test_feature_selection("all_merged.csv", id_col="id", top_k=10)
-print("Top 5 probes:", top)
+stats_df, top = welch_t_test_feature_selection("all_merged_v2.csv", id_col="id", exclude_ids=["AAC75568.1"], top_k=10)
+print("Top 10 probes:", top)
