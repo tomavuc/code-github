@@ -100,12 +100,13 @@ def extract_seq_features(record) -> dict:
         features[f'aa_{aa}'] = aa_counts.get(aa, 0) / total * 100
     
     #Charged amino acids are: 
-    features['charged_aa'] = (aa_counts.get('D',0) + aa_counts.get('E',0) + 
-                             aa_counts.get('K',0) + aa_counts.get('R',0)) / total * 100
+    features['neg_charged_aa'] = (aa_counts.get('D',0) + aa_counts.get('E',0)) / total * 100
+    
+    features['pos_charged_aa'] = (aa_counts.get('K',0) + aa_counts.get('R',0) + aa_counts.get('H', 0)) / total * 100 
     
     #Hydrophobic amino acids are:
     features['hydrophobic_aa'] = (aa_counts.get('A',0) + aa_counts.get('V',0) + 
-                                 aa_counts.get('I',0) + aa_counts.get('L',0)) / total * 100
+                                 aa_counts.get('I',0) + aa_counts.get('L',0)) / total * 100 
     
     # Phyical/Chemical properties
     try:
@@ -280,7 +281,7 @@ def compute_cluster_flda_distance(cif_path, gb_id, id_map=None, cluster_chains=(
     
     return (d1,d2) if cluster_chains[0]==i1 else (d2,d1)
 
-def compute_sphere_features(cif_path: str, gb_id: str, radius: float = 10.0, chain_ids = ("A", "B"), prefix = f"Sphere10", key = _aminoacids_key):
+def compute_sphere_features(cif_path: str, gb_id: str, radius: float = 20.0, chain_ids = ("A", "B"), prefix = f"Sphere10", key = _aminoacids_key):
     parser = MMCIFParser()
     struct_id = os.path.basename(cif_path).split('.')[0]
     structure = parser.get_structure(struct_id, cif_path)
@@ -398,7 +399,7 @@ if __name__ == "__main__":
                 print(f"Could not compute opening for {gb_id}: {e}")
                 opening_results[gb_id] = None
             try:
-                sphere_results[gb_id] = compute_sphere_features(cif_path, gb_id, radius=10.0)
+                sphere_results[gb_id] = compute_sphere_features(cif_path, gb_id, radius=20.0)
             except Exception as e:
                 print(f"Sphere-feature extraction failed for {gb_id}: {e}")
                 sphere_results[gb_id] = {}

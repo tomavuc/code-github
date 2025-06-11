@@ -39,12 +39,7 @@ colours = [
     for lab in merged_sorted['label']]
 
 plt.figure(figsize=(8, max(4, 0.25 * len(merged_sorted))))
-plt.barh(
-    merged_sorted['id'], 
-    merged_sorted['phylo_dist'],  
-    color=colours,                
-    edgecolor='black'
-)
+plt.barh(merged_sorted['id'], merged_sorted['phylo_dist'], color=colours, edgecolor='black')
 plt.xlabel("Evolutionary distance (Blosum80)")
 plt.title("Distance to E. coli reference (AAC75568.1)")
 plt.tight_layout()

@@ -17,7 +17,7 @@ from sklearn.preprocessing import StandardScaler
 from utils import balance_and_split_data
 
 data_path = "all_merged_v2.csv"
-models_pkl = "best_models_undersampling.pkl"
+models_pkl = "best_models.pkl"
 out_dir = "shap_reports"
 max_display = 10
 
@@ -57,23 +57,24 @@ def run_one(model_name: str, pipe, X: pd.DataFrame, out_dir: str, max_display=ma
 
     plt.tight_layout()
     shap.summary_plot(shap_vals, X, feature_names=X.columns,
-                    show=True, max_display=max_display, plot_type = 'violin',
+                    show=True, max_display=max_display, title = f"{model_name} SHAP values", plot_type = 'violin',
                     plot_size=(8, 6))
+    shap.savefig(os.path.join(out_dir, f"{model_name}_shap_violin_plot.png"))
     shap.summary_plot(shap_vals, X, plot_type='bar', feature_names=X.columns, max_display=max_display,
                   color="lightgrey",show=True)
+    plt.savefig(os.path.join(out_dir, f"{model_name}_shap_bar_plot.png"))
 
 if __name__ == "__main__":
     os.makedirs(out_dir, exist_ok=True)
     df = pd.read_csv(data_path)
-    balanced, remaining = balance_and_split_data(data_path)
-    balanced['pIspG'] = balanced['pIspG'].replace({'+/-': '+'})
-    balanced['pIspG'] = balanced['pIspG'].replace({'+': 1, '-': 0}).astype(int)
-    X = balanced.drop(columns=['id', 'UniProtID', 'pIspG', 'organism'])
+    df['pIspG'] = df['pIspG'].replace({'+/-': '+'})
+    df['pIspG'] = df['pIspG'].replace({'+': 1, '-': 0}).astype(int)
+    X = df.drop(columns=['id', 'UniProtID', 'pIspG', 'organism'])
     scaler = StandardScaler()
     X_scaled = pd.DataFrame(scaler.fit_transform(X), columns=X.columns, index=X.index)
     var_thresh = 0.1
     keep_cols  = X_scaled.var(axis=0) > var_thresh
-    X_filtered = X_scaled#.loc[:, keep_cols]
+    X_filtered = X_scaled.loc[:, keep_cols]
 
     best = joblib.load(models_pkl)
     print("Loaded", len(best), "pipelines")

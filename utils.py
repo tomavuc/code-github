@@ -102,7 +102,7 @@ def merge_chains(input_file: str, output_file: str):
 
 basic_features = pd.read_csv('datasets/final_feature_matrix_v3.csv')
 msa_features = pd.read_csv('ispG_MSA_features_full.csv')
-deeprank_features = pd.read_csv('deeprank_features.csv')
+deeprank_features = pd.read_csv('deeprank_features_v2.csv')
 phylo_tree = pd.read_csv('ispG_distances_to_AAC75568.1.csv')
 print(phylo_tree)
 
@@ -112,5 +112,5 @@ merged = msa_features.merge(deeprank_features, on='id', how= 'inner', suffixes=(
 merged = merged.merge(new, on='id', how='inner', suffixes=("", "_gb"))
 merged = merged.merge(phylo_tree, on = 'id', how = 'inner')
 
-merged.to_csv("all_merged_v2.csv", index = False)
+merged.to_csv("all_merged_v3.csv", index = False)
 print(merged.head())

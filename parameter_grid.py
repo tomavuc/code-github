@@ -15,11 +15,11 @@ models_dict = {
     "XGB": [
         XGBClassifier(device = "cuda", random_state=42, verbosity = 0),
         {"n_estimators": [100, 150, 200],
-        "max_depth": [3, 4, 5, 6],
-        "learning_rate": [0.01, 0.1, 0.2, 0.4],
+        "max_depth": [None, 2, 5, 10],
+        "learning_rate": [0.001, 0.01, 0.1, 1],
         "min_child_weight": [1, 5, 10],
         "eval_metric": ["auc", "aucpr", "logloss"], 
-        "alpha": [0, 0.1, 0.5, 1]}
+        "alpha": [0, 0.2, 0.5, 1]}
     ], 
     "KNN": [
         KNeighborsClassifier(),
