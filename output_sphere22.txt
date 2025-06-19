@@ -1,0 +1,110 @@
+scikit-learn version: 1.6.1
+loaded from         : C:\Users\toma\Desktop\BScNB_Y3\BEP\code-github\.conda\Lib\site-packages\sklearn\__init__.py
+2.1.4
+Machine learning with all features, sphere 22!
+c:\Users\toma\Desktop\BScNB_Y3\BEP\code-github\machine_learning_full.py:17: FutureWarning: Downcasting behavior in `replace` is deprecated and will be removed in a future version. To retain the old behavior, explicitly call `result.infer_objects(copy=False)`. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  data['pIspG'] = data['pIspG'].replace({'+': 1, '-': 0})
+Data is full!
+
+Dropped features (var < 0.1 ):
+['GO:0016114', 'GO:0019288', 'GO:0046429', 'GO:0051539']
+Kept 117 / 121 features (var > 0.1)
+Grid search started for KNN
+Model: KNN, Average Balanced Accuracy: 0.5776, Std: 0.0865
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.84      0.92      0.88        62
+           1       0.38      0.21      0.27        14
+
+    accuracy                           0.79        76
+   macro avg       0.61      0.57      0.57        76
+weighted avg       0.75      0.79      0.77        76
+
+Confusion matrix:
+[[57  5]
+ [11  3]]
+Stored best KNN model for SHAP
+Grid search started for SGD
+Model: SGD, Average Balanced Accuracy: 0.4327, Std: 0.1112
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.78      0.63      0.70        62
+           1       0.12      0.21      0.15        14
+
+    accuracy                           0.55        76
+   macro avg       0.45      0.42      0.42        76
+weighted avg       0.66      0.55      0.60        76
+
+Confusion matrix:
+[[39 23]
+ [11  3]]
+Stored best SGD model for SHAP
+Grid search started for SVM
+Model: SVM, Average Balanced Accuracy: 0.5429, Std: 0.1154
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.83      0.92      0.87        62
+           1       0.29      0.14      0.19        14
+
+    accuracy                           0.78        76
+   macro avg       0.56      0.53      0.53        76
+weighted avg       0.73      0.78      0.75        76
+
+Confusion matrix:
+[[57  5]
+ [12  2]]
+Stored best SVM model for SHAP
+Grid search started for DT
+Model: DT, Average Balanced Accuracy: 0.5199, Std: 0.1032
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.82      0.81      0.81        62
+           1       0.20      0.21      0.21        14
+
+    accuracy                           0.70        76
+   macro avg       0.51      0.51      0.51        76
+weighted avg       0.71      0.70      0.70        76
+
+Confusion matrix:
+[[50 12]
+ [11  3]]
+Stored best DT model for SHAP
+Grid search started for RF
+Model: RF, Average Balanced Accuracy: 0.5923, Std: 0.0930
+
+Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.84      0.95      0.89        62
+           1       0.50      0.21      0.30        14
+
+    accuracy                           0.82        76
+   macro avg       0.67      0.58      0.60        76
+weighted avg       0.78      0.82      0.78        76
+
+Confusion matrix:
+[[59  3]
+ [11  3]]
+Stored best RF model for SHAP
+Best performing model: RF - (0.5923 +- 0.0930)
+
+Nested CV Results:
+KNN {'mean_accuracy': np.float64(0.5775641025641025), 'std_accuracy': np.float64(0.08653608733685234)}
+SGD {'mean_accuracy': np.float64(0.43269230769230765), 'std_accuracy': np.float64(0.11121379213395816)}
+SVM {'mean_accuracy': np.float64(0.542948717948718), 'std_accuracy': np.float64(0.11535968391618144)}
+DT {'mean_accuracy': np.float64(0.5198717948717948), 'std_accuracy': np.float64(0.1031712796857985)}
+RF {'mean_accuracy': np.float64(0.5923076923076923), 'std_accuracy': np.float64(0.0930348849052653)}
+{'KNN': KNeighborsClassifier(metric='manhattan', n_neighbors=3), 'SGD': SGDClassifier(early_stopping=True, eta0=0.01, learning_rate='invscaling',
+              random_state=42), 'SVM': SVC(C=0.5, class_weight='balanced', gamma='auto', kernel='poly',
+    random_state=42), 'DT': DecisionTreeClassifier(criterion='log_loss', max_features='sqrt',
+                       random_state=42), 'RF': RandomForestClassifier(criterion='log_loss', max_features=50,
+                       min_samples_split=3, random_state=42)}
+Saved one best estimator per model class to artifacts/best_models_22.pkl

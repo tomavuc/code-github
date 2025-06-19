@@ -110,4 +110,4 @@ avg_df = (new_df_C.set_index("id").add(new_df_D.set_index("id")).div(2).reset_in
 
 print("\nAveraged feature matrix:")
 print(avg_df.head())
-avg_df.to_csv("deeprank_features_v2.csv", index=False)
+#avg_df.to_csv("deeprank_features_v2.csv", index=False)

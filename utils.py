@@ -100,10 +100,10 @@ def merge_chains(input_file: str, output_file: str):
 # pdbs = convert_all_cif_to_pdb("dimers_test", output_dir="pdb_converted")
 # make_affinity_csv("pdb_converted", out_csv="binding_affinities_dimers.csv")
 
-basic_features = pd.read_csv('datasets/final_feature_matrix_v3.csv')
+basic_features = pd.read_csv('datasets/final_feature_matrix_22.csv')
 msa_features = pd.read_csv('ispG_MSA_features_full.csv')
 deeprank_features = pd.read_csv('deeprank_features_v2.csv')
-phylo_tree = pd.read_csv('ispG_distances_to_AAC75568.1.csv')
+phylo_tree = pd.read_csv('ispG_distances_blosum62.csv')
 print(phylo_tree)
 
 new = basic_features.rename(columns={'GenBankID': 'id'})
@@ -112,5 +112,5 @@ merged = msa_features.merge(deeprank_features, on='id', how= 'inner', suffixes=(
 merged = merged.merge(new, on='id', how='inner', suffixes=("", "_gb"))
 merged = merged.merge(phylo_tree, on = 'id', how = 'inner')
 
-merged.to_csv("all_merged_v3.csv", index = False)
+merged.to_csv("all_merged_22.csv", index = False)
 print(merged.head())

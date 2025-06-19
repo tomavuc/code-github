@@ -41,5 +41,9 @@ def welch_t_test_feature_selection(csv_path, label_col= "pIspG", pos_label = "+"
 
     return results, top_features
 
-stats_df, top = welch_t_test_feature_selection("all_merged_v3.csv", id_col="id", top_k=10)
-print("Top 10 probes:", top)
+stats_df, top = welch_t_test_feature_selection("all_merged_25.csv", id_col="id", top_k=10)
+t = "t_stat"
+p = "p_value"
+for i in range(len(top)):
+    print(f"{top[i]} - t_test value: {stats_df[t][i]}, p-value: {stats_df[p][i]}")
+print("Top 10 probes based on t_test:", top)

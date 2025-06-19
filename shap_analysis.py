@@ -14,10 +14,8 @@ from sklearn.svm import SVC
 from xgboost import XGBClassifier
 from sklearn.preprocessing import StandardScaler
 
-from utils import balance_and_split_data
-
-data_path = "all_merged_v2.csv"
-models_pkl = "best_models.pkl"
+data_path = "all_merged_22.csv"
+models_pkl = "best_models_22.pkl"
 out_dir = "shap_reports"
 max_display = 10
 
@@ -59,15 +57,13 @@ def run_one(model_name: str, pipe, X: pd.DataFrame, out_dir: str, max_display=ma
     shap.summary_plot(shap_vals, X, feature_names=X.columns,
                     show=True, max_display=max_display, title = f"{model_name} SHAP values", plot_type = 'violin',
                     plot_size=(8, 6))
-    shap.savefig(os.path.join(out_dir, f"{model_name}_shap_violin_plot.png"))
     shap.summary_plot(shap_vals, X, plot_type='bar', feature_names=X.columns, max_display=max_display,
-                  color="lightgrey",show=True)
-    plt.savefig(os.path.join(out_dir, f"{model_name}_shap_bar_plot.png"))
+                  color="lightblue", show=True)
 
 if __name__ == "__main__":
     os.makedirs(out_dir, exist_ok=True)
     df = pd.read_csv(data_path)
-    df['pIspG'] = df['pIspG'].replace({'+/-': '+'})
+    df['pIspG'] = df['pIspG'].replace({'+/-': '-'})
     df['pIspG'] = df['pIspG'].replace({'+': 1, '-': 0}).astype(int)
     X = df.drop(columns=['id', 'UniProtID', 'pIspG', 'organism'])
     scaler = StandardScaler()

@@ -10,7 +10,7 @@ alignment = AlignIO.read(alignment_path, "clustal")
 check = pd.read_csv('ispG_MSA_features_full.csv')
 print(check['pid_total'].mean(), check['pid_total'].std())
 
-calc = DistanceCalculator("blosum80") # protein model
+calc = DistanceCalculator("blosum62") # protein model
 dm = calc.get_distance(alignment)
 
 df_tri = pd.DataFrame(dm.matrix, index=dm.names, columns=dm.names)
@@ -25,12 +25,8 @@ map['id'] = df_labels.iloc[:, 1].astype(str).str.strip()
 map['label'] = df_labels.iloc[:, 2]
 label_df = map.replace({'+/-': '+'})
 
-merged = (
-    dist_series.rename("phylo_dist").reset_index()
-      .rename(columns={"index": "id"})
-      .merge(label_df, on="id", how="left"))
-
-merged_sorted = merged.sort_values("phylo_dist")
+dist_df = dist_series.rename("phylo_dist").reset_index().rename(columns={"index": "id"})
+merged_sorted = dist_df.merge(label_df, on="id", how="left").sort_values("phylo_dist")
 
 colours = [
     'blue' if lab == '+' else
@@ -40,7 +36,9 @@ colours = [
 
 plt.figure(figsize=(8, max(4, 0.25 * len(merged_sorted))))
 plt.barh(merged_sorted['id'], merged_sorted['phylo_dist'], color=colours, edgecolor='black')
-plt.xlabel("Evolutionary distance (Blosum80)")
+plt.xlabel("Evolutionary distance (Blosum62)")
 plt.title("Distance to E. coli reference (AAC75568.1)")
 plt.tight_layout()
 plt.show()
+
+dist_df.set_index('id').to_csv('ispG_distances_blosum62.csv')

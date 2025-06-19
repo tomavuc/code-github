@@ -12,15 +12,15 @@ import sklearn
 
 
 models_dict = {
-    "XGB": [
-        XGBClassifier(device = "cuda", random_state=42, verbosity = 0),
-        {"n_estimators": [100, 150, 200],
-        "max_depth": [None, 2, 5, 10],
-        "learning_rate": [0.001, 0.01, 0.1, 1],
-        "min_child_weight": [1, 5, 10],
-        "eval_metric": ["auc", "aucpr", "logloss"], 
-        "alpha": [0, 0.2, 0.5, 1]}
-    ], 
+    # "XGB": [
+    #     XGBClassifier(device = "cuda", random_state=42, verbosity = 0),
+    #     {"n_estimators": [100, 150, 200],
+    #     "max_depth": [None, 2, 5, 10],
+    #     "learning_rate": [0.001, 0.01, 0.1, 1],
+    #     "min_child_weight": [1, 5, 10],
+    #     "eval_metric": ["auc", "aucpr", "logloss"], 
+    #     "alpha": [0, 0.2, 0.5, 1]}
+    # ], 
     "KNN": [
         KNeighborsClassifier(),
         {"n_neighbors": [1, 2, 3, 5],
@@ -52,13 +52,13 @@ models_dict = {
         "max_features": ["sqrt", "log2", None, 30, 50, 70, 90, 10, 20]}
     ],
     "RF": [
-        RandomForestClassifier(random_state=42),
-        {"criterion": ["gini", "log_loss", "entropy"],
-        "n_estimators": [100, 150, 200],
-        "max_depth": [None, 5, 10, 15],
-        "min_samples_split": [2, 3, 5],
-        "max_features": ["sqrt", "log2", None, 30, 50, 70, 90, 10, 20]}
-    ],
+       RandomForestClassifier(random_state=42),
+       {"criterion": ["gini", "log_loss", "entropy"],
+       "n_estimators": [100, 150, 200],
+       "max_depth": [None, 5, 10, 15],
+       "min_samples_split": [2, 3, 5],
+       "max_features": ["sqrt", "log2", None, 30, 50, 70, 90, 10, 20]}
+    ]
     #"XGB": [
         #XGBClassifier(device = "cuda", gpu_id = 0, random_state=42),
         #{"classifier__n_estimators": [100, 150, 200],

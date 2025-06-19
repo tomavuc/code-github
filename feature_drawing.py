@@ -1,12 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
-input_feature = 'binding_site_opening'
+input_feature = 'RMSE'
 
-df = pd.read_csv("all_merged_v2.csv")
+df = pd.read_csv("all_merged_final.csv")
 feature = df.sort_values(input_feature)
 print(feature[input_feature])
-
+print(np.mean(feature[input_feature]))
 
 colours = [
     'green' if lab == '+' else
